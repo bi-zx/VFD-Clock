@@ -2,16 +2,20 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "LittleFS.h"
-// #include "clock_function.h"
+#include "clock_function.h"
 #include "13ST84GINK.h"
+
+#include "measuring_lightIntensity.h"
 
 void clock_funtion_task(void* parameter)
 {
-    vTaskDelay(pdMS_TO_TICKS(1000)); // 等待系统稳定
     VFDWriteStrAndShow(1, "Hello,World!");
     while (1)
     {
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        unsigned char luminance = measure_brightness();
+        // Serial.println(luminance);
+        SetLuminance(luminance);
+        vTaskDelay(300);
     }
 }
 
@@ -25,7 +29,7 @@ void setup()
         Serial.println("An Error has occurred while mounting LittleFS");
     }
     // 初始化VFD
-    VFDInit(50);
+    VFDInit(0x30);
 
     // 创建主任务
     xTaskCreate(

@@ -23,6 +23,9 @@
 // 蜂鸣器IO分配
 #define PIN_NUM_BZ 3
 
+// 环境光传感器IO分配
+#define PIN_NUM_LIGHT_SENSOR 4
+
 // 按键IO分配
 #define key1 9
 #define key2 6
