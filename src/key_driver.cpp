@@ -2,83 +2,95 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
 #include "freertos/task.h"
-#include "freertos/queue.h"
 #include "freertos/event_groups.h"
 #include "key_driver.h"
 #include "configuration.h"
 #include "clock_function.h"
+#include <OneButton.h>
 
-QueueHandle_t keyEvenqueue = NULL; // 按键中断消息队列句柄
+// 按键配置
+#define CLICKSPEED 200      // 单击检测时间
+#define DEBOUNCETICKS 30    // 去抖时间
+#define LONGPRESSTIME 800   // 长按检测时间，单位ms
 
-// 为每个按键创建独立的中断处理函数
-static void IRAM_ATTR key1_intrhandle()
+// 创建按键对象
+OneButton button1(key1, true, true); // 启用内部上拉，启用并联电容模式
+OneButton button2(key2, true, true);
+OneButton button3(key3, true, true);
+
+// 按键检测任务
+static void key_check_task(void* parameter)
 {
-    detachInterrupt(key1);
-    uint32_t key_num = key1;
-    xQueueSendFromISR(keyEvenqueue, &key_num, NULL);
-}
-
-static void IRAM_ATTR key2_intrhandle()
-{
-    detachInterrupt(key2);
-    uint32_t key_num = key2;
-    xQueueSendFromISR(keyEvenqueue, &key_num, NULL);
-}
-
-static void IRAM_ATTR key3_intrhandle()
-{
-    detachInterrupt(key3);
-    uint32_t key_num = key3;
-    xQueueSendFromISR(keyEvenqueue, &key_num, NULL);
-}
-
-// 接收按键中断信息任务
-static void key_intr_recv_task(void* parameter)
-{
-    uint32_t keyrEev;
-
     while (1)
     {
-        if (xQueueReceive(keyEvenqueue, &keyrEev, portMAX_DELAY))
-        {
-            if (digitalRead(keyrEev) == LOW)
-            {
-                // 要做的任务
-                if (keyrEev == key1) xEventGroupSetBits(KeyEventHandle, key1_event);
-                if (keyrEev == key2) xEventGroupSetBits(KeyEventHandle, key2_event);
-                if (keyrEev == key3) xEventGroupSetBits(KeyEventHandle, key3_event);
-            }
-            // 重新启用中断，根据按键选择对应的处理函数
-            if (keyrEev == key1) attachInterrupt(digitalPinToInterrupt(key1), key1_intrhandle, FALLING);
-            if (keyrEev == key2) attachInterrupt(digitalPinToInterrupt(key2), key2_intrhandle, FALLING);
-            if (keyrEev == key3) attachInterrupt(digitalPinToInterrupt(key3), key3_intrhandle, FALLING);
-        }
-        vTaskDelay(300 / portTICK_PERIOD_MS);
+        button1.tick();
+        button2.tick();
+        button3.tick();
+        vTaskDelay(5 / portTICK_PERIOD_MS); // 降低到5ms检测间隔
     }
 }
 
 void key_init()
 {
-    // 配置GPIO
-    pinMode(key1, INPUT_PULLUP);
-    pinMode(key2, INPUT_PULLUP);
-    pinMode(key3, INPUT_PULLUP);
+    // 设置按键参数
+    button1.setClickMs(CLICKSPEED);
+    button1.setDebounceMs(DEBOUNCETICKS);
+    button1.setPressMs(LONGPRESSTIME);
 
-    // 配置中断，每个按键使用独立的处理函数
-    attachInterrupt(digitalPinToInterrupt(key1), key1_intrhandle, FALLING);
-    attachInterrupt(digitalPinToInterrupt(key2), key2_intrhandle, FALLING);
-    attachInterrupt(digitalPinToInterrupt(key3), key3_intrhandle, FALLING);
+    button2.setClickMs(CLICKSPEED);
+    button2.setDebounceMs(DEBOUNCETICKS);
+    button2.setPressMs(LONGPRESSTIME);
 
-    // 创建消息队列以及消息接收任务
-    keyEvenqueue = xQueueCreate(10, sizeof(uint32_t));
-    if (keyEvenqueue == NULL)
+    button3.setClickMs(CLICKSPEED);
+    button3.setDebounceMs(DEBOUNCETICKS);
+    button3.setPressMs(LONGPRESSTIME);
+
+    // 配置按键1回调函数
+    button1.attachClick([]()
     {
-        Serial.println("Error: create queue fail!");
-    }
-    else
+        xEventGroupSetBits(KeyEventHandle, key1_event);
+    });
+    button1.attachLongPressStart([]()
     {
-        xTaskCreate(key_intr_recv_task, "key_intr_recv_task", 1024, NULL, 20, NULL);
-    }
+        xEventGroupSetBits(KeyEventHandle, key1_long_press_event);
+    });
+
+    // 配置按键2回调函数
+    button2.attachClick([]()
+    {
+        xEventGroupSetBits(KeyEventHandle, key2_event);
+    });
+    button2.attachLongPressStart([]()
+    {
+        xEventGroupSetBits(KeyEventHandle, key2_long_press_event);
+    });
+
+    // 配置按键3回调函数
+    button3.attachClick([]()
+    {
+        xEventGroupSetBits(KeyEventHandle, key3_event);
+    });
+    button3.attachLongPressStart([]()
+    {
+        xEventGroupSetBits(KeyEventHandle, key3_long_press_event);
+    });
+
+    // 创建按键检测任务
+    xTaskCreate(
+        key_check_task,
+        "key_check_task",
+        2048,
+        NULL,
+        20,
+        NULL
+    );
 
     Serial.println("Key initialization completed");
+}
+
+void key_tick()
+{
+    button1.tick();
+    button2.tick();
+    button3.tick();
 }

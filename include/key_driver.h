@@ -1,11 +1,15 @@
 #ifndef _key_driver_H
 #define _key_driver_H
 
-#ifndef __key_driver_C
+#include <OneButton.h>
 
-//extern EventGroupHandle_t KeyEventHandle;//按键事件消息队列句柄
-#endif // !__ClockFunction_C
+#ifndef __key_driver_C
+extern OneButton button1;
+extern OneButton button2;
+extern OneButton button3;
+#endif
 
 void key_init();
+void key_tick(); // 新增按键检测函数
 
 #endif

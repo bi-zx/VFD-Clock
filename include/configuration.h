@@ -43,6 +43,8 @@
 #define key1_event 0x01
 #define key2_event 0x02
 #define key3_event 0x04
-#define time_calibration_event 0x10
-
+#define key1_long_press_event 0x08
+#define key2_long_press_event 0x10
+#define key3_long_press_event 0x20
+#define time_calibration_event 0x40
 #endif
