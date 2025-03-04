@@ -1,6 +1,10 @@
 #ifndef _configuration_H
 #define _configuration_H
 
+// WIFI名称、密码
+#define ESP_WIFI_SSID "ZTE-AX3000"
+#define ESP_WIFI_PASS "0000011111"
+
 // 多少点校时 的时间
 #define TCALIBRATION 01 // 凌晨1点
 

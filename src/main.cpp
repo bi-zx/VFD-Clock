@@ -7,21 +7,24 @@
 
 #include "measuring_lightIntensity.h"
 #include "buzzer_driver.h"
+#include "key_driver.h"
+#include "fs_info_RW.h"
 
 void clock_funtion_task(void* parameter)
 {
     VFDWriteStrAndShow(1, "Hello,World!");
     ADCInit();
     buzzer_init();
+    // key_init();
     while (1)
     {
         unsigned char luminance = measure_brightness();
         // Serial.println(luminance);
         SetLuminance(luminance);
 
-        unsigned char bz_dat = DDIDI;
-        xQueueSend(bz_queue, &bz_dat, 0); //给蜂鸣器任务
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        // unsigned char bz_dat = DDIDI;
+        // xQueueSend(bz_queue, &bz_dat, 0); //给蜂鸣器任务
+        // vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 }
 
