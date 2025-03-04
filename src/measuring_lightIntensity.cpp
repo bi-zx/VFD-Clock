@@ -35,7 +35,7 @@ unsigned char measure_brightness()
 
     // 数据转换成电压 单位mv   测量值800-2900mv之间
     uint32_t voltage = map(adc_reading, 0, 4095, 0, 3300); // 将ADC值映射到电压值(0-3.3V)
-    Serial.printf("ADC voltage: %ld mV\n", voltage);
+    // Serial.printf("ADC voltage: %ld mV\n", voltage);
 
     // 转成VFD亮度设置值   范围0-240
     temp = (uint16_t)voltage; // 截取低16位值用于计算
