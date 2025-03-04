@@ -26,6 +26,10 @@
 // 环境光传感器IO分配
 #define PIN_NUM_LIGHT_SENSOR 4
 
+// IIC总线IO分配
+#define PIN_NUM_IIC_SDA 7
+#define PIN_NUM_IIC_SDL 2
+
 // 按键IO分配
 #define key1 9
 #define key2 6

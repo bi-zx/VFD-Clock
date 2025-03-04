@@ -1,12 +1,8 @@
 #include <Arduino.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "driver/gpio.h"
-#include "esp_log.h"
 #include "driver/adc.h"
-#include "esp_adc_cal.h"
 #include "measuring_lightIntensity.h"
 #include "configuration.h"
 
@@ -15,7 +11,7 @@ static const char* TAG = "measuring lightIntensity";
 #define NO_OF_SAMPLES   5          // 多重采样次数
 
 /* ADC初始化 */
-void ADCIint()
+void ADCInit()
 {
     // 配置ADC
     analogReadResolution(12); // ADC配置为12位
