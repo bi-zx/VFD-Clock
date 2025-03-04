@@ -7,7 +7,7 @@ void SetLuminance(unsigned char lum);
 void VFDDisplaySwitch(unsigned char set);
 void VFDDStandby(unsigned char set);
 void VFDInit(unsigned char slum);
-void WriteCGRAM(unsigned char x, char (*arr)[5], unsigned char n);
+void WriteCGRAM(unsigned char x, unsigned char* arr);
 void WriteDisplayCMD();
 void VFDWriteOneDIYChar(unsigned char x, unsigned char chr);
 void VFDWriteOneDIYCharAndShow(unsigned char x, unsigned char chr);

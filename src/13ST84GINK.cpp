@@ -136,16 +136,18 @@ void VFDInit(unsigned char slum)
 }
 
 /* 写CGRAM */
-void WriteCGRAM(unsigned char x, char (*arr)[5], unsigned char n)
+void WriteCGRAM(unsigned char x, unsigned char* arr)
 {
     digitalWrite(PIN_NUM_CS, 0); //CS拉低
     usleep(1);
     VFDWriteData(0x40 + x); //地址寄存器起始位置
-    VFDWriteData(arr[n][0]);
-    VFDWriteData(arr[n][1]);
-    VFDWriteData(arr[n][2]);
-    VFDWriteData(arr[n][3]);
-    VFDWriteData(arr[n][4]);
+
+    // 修改数组访问方式，直接写入连续的5个字节
+    for (unsigned char i = 0; i < 5; i++)
+    {
+        VFDWriteData(arr[i]);
+    }
+
     digitalWrite(PIN_NUM_CS, 1); //CS拉高
     usleep(1);
 }

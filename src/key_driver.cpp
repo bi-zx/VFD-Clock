@@ -8,7 +8,6 @@
 #include "configuration.h"
 #include "clock_function.h"
 
-static const char* TAG = "key driver";
 QueueHandle_t keyEvenqueue = NULL; // 按键中断消息队列句柄
 
 // 为每个按键创建独立的中断处理函数

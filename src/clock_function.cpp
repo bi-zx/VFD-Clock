@@ -188,8 +188,7 @@ void BootAnimation()
     for (cnt = 1; cnt < 13; cnt++)
     {
         VFDWriteStrAndShow(cnt, ">");
-        // WriteCGRAM(6, &G1Temp[0][0], i);
-        WriteCGRAM(6, (char (*)[5])&G1Temp[0][0], i);
+        WriteCGRAM(6, &G1Temp[i][0]);
         VFDWriteOneDIYCharAndShow(0, 6); //把CGRAM 6的缓存显示到G1上
         i++;
         if (i >= 4) i = 0;
@@ -278,8 +277,7 @@ void FrameRefresh(unsigned char num, unsigned char mCnt1, unsigned char mCnt2, b
     dispalyTemp[num][3] = (numberFont[lastTimeTemp[num]][3] << mCnt1) | (numberFont[nowTimeTemp[num]][3] >> mCnt2);
     dispalyTemp[num][4] = (numberFont[lastTimeTemp[num]][4] << mCnt1) | (numberFont[nowTimeTemp[num]][4] >> mCnt2);
 
-    // WriteCGRAM(num, dispalyTemp, num);
-    WriteCGRAM(num, (char (*)[5])dispalyTemp, num);
+    WriteCGRAM(num, &dispalyTemp[num][0]);
     VFDWriteOneDIYCharAndShow(num + 7, num);
 }
 
@@ -292,8 +290,8 @@ void LastFrameRefresh(unsigned char num)
     dispalyTemp[num][3] = numberFont[nowTimeTemp[num]][3];
     dispalyTemp[num][4] = numberFont[nowTimeTemp[num]][4];
 
+    WriteCGRAM(num, &dispalyTemp[num][0]);
     // WriteCGRAM(num, dispalyTemp, num);
-    WriteCGRAM(num, (char (*)[5])dispalyTemp, num);
     VFDWriteOneDIYCharAndShow(num + 7, num);
 }
 
@@ -504,8 +502,7 @@ void G1Animation()
         G1AnimationTemp[0][3] = dispalyTemp[6][3] | G1AnimationFont[acnt][3];
         G1AnimationTemp[0][4] = dispalyTemp[6][4] | G1AnimationFont[acnt][4];
 
-        // WriteCGRAM(6, &G1AnimationTemp[0][0], 0); //把G1显示缓存写入CGRAM
-        WriteCGRAM(6, (char (*)[5])&G1AnimationTemp[0][0], 0);
+        WriteCGRAM(6, &G1AnimationTemp[0][0]); //把G1显示缓存写入CGRAM
         VFDWriteOneDIYCharAndShow(0, 6); //把CGRAM 6的缓存显示到G1上
         acnt++;
         if (acnt >= 4) acnt = 0;
@@ -688,7 +685,7 @@ void G1AndADAnimation()
         G1AnimationTemp[0][3] = dispalyTemp[6][3] | G1AnimationFont[at][3];
         G1AnimationTemp[0][4] = dispalyTemp[6][4] | G1AnimationFont[at][4];
 
-        WriteCGRAM(6, (char (*)[5])&G1AnimationTemp[0][0], 0); //把G1显示缓存写入CGRAM
+        WriteCGRAM(6, &G1AnimationTemp[0][0]); //把G1显示缓存写入CGRAM
         VFDWriteOneDIYCharAndShow(0, 6); //把CGRAM 6的缓存显示到G1上
         at++;
         if (at >= 4) at = 0;
@@ -1104,7 +1101,7 @@ void clock_funtion_task(void* parameter)
     BootAnimation(); //开机动画
 
     //把设置的标志位显示
-    WriteCGRAM(6, (char (*)[5])&dispalyTemp[6][0], 0); //把G1显示缓存写入CGRAM
+    WriteCGRAM(6, &dispalyTemp[6][0]); //把G1显示缓存写入CGRAM
     VFDWriteOneDIYCharAndShow(0, 6); //把CGRAM 6的缓存显示到G1上
 
 
