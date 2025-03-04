@@ -187,7 +187,7 @@ void VFDWriteOneDIYCharAndShow(unsigned char x, unsigned char chr)
 }
 
 /* 写入字符串 */
-void VFDWriteStr(unsigned char x, char* str)
+void VFDWriteStr(unsigned char x, const char* str)
 {
     digitalWrite(PIN_NUM_CS, 0); //开始传输
     usleep(1);
@@ -202,7 +202,7 @@ void VFDWriteStr(unsigned char x, char* str)
 }
 
 /* 写入字符串并显示 */
-void VFDWriteStrAndShow(unsigned char x, char* str)
+void VFDWriteStrAndShow(unsigned char x, const char* str)
 {
     digitalWrite(PIN_NUM_CS, 0); //开始传输
     usleep(1);

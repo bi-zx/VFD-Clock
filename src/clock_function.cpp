@@ -1,10 +1,10 @@
 #include <Arduino.h>
-#include <stdio.h>
-#include <time.h>
-#include <string.h>
-#include <math.h>
+#include <cstdio>
+#include <ctime>
+#include <cstring>
+#include <cmath>
 #include <sys/time.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"

@@ -11,8 +11,8 @@ void WriteCGRAM(unsigned char x, unsigned char* arr);
 void WriteDisplayCMD();
 void VFDWriteOneDIYChar(unsigned char x, unsigned char chr);
 void VFDWriteOneDIYCharAndShow(unsigned char x, unsigned char chr);
-void VFDWriteStr(unsigned char x, char* str);
-void VFDWriteStrAndShow(unsigned char x, char* str);
+void VFDWriteStr(unsigned char x, const char* str);
+void VFDWriteStrAndShow(unsigned char x, const char* str);
 void VFDWriteOneADRAMAndShow(unsigned char x, unsigned char dat);
 void VFDWriteAllADRAMAndShow(unsigned char* dat);
 
