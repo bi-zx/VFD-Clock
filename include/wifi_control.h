@@ -5,13 +5,13 @@
 #include <WiFi.h>
 
 // WiFi Station 模式函数
-void wifi_sta_start(void);
-void wifi_sta_stop(void);
-void wifi_disconnect(void);
-void wifi_connect(void);
+void wifi_sta_start();
+void wifi_sta_stop();
+void wifi_disconnect();
+void wifi_connect();
 
 // WiFi AP 模式函数
-void wifi_ap_start(void);
-void wifi_ap_stop(void);
+void wifi_ap_start();
+void wifi_ap_stop();
 
 #endif // WIFI_CONTROL_H

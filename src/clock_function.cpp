@@ -19,7 +19,7 @@
 #include "13ST84GINK.h"
 #include "clock_function.h"
 #include "configuration.h"
-// #include "http_request.h"
+#include "http_request.h"
 #include "wifi_control.h"
 #include <esp32-hal-gpio.h>
 
@@ -27,7 +27,6 @@
 #include "key_driver.h"
 #include "measuring_lightIntensity.h"
 #include "buzzer_driver.h"
-#include "http_request.h"
 
 static const char* TAG = "clock function";
 EventGroupHandle_t KeyEventHandle = NULL; //按键事件消息队列句柄
@@ -77,7 +76,7 @@ time_t now;
 struct tm timeinfo;
 
 //0显示温湿度  1显示日期
-bool THDATE = false;
+bool THDATE = 0;
 char str[6]; //时间日期显示缓存
 unsigned char monTemp; //月缓存
 
@@ -86,7 +85,6 @@ signed short td;
 unsigned short hd;
 unsigned char bd;
 bool recflag = false; //接收到温湿度传感器数据 标志
-bool batLow = false; //温湿度传感器电池低电量 标志
 
 bool alarm_signal = false; //警报信号
 
@@ -708,31 +706,22 @@ void THDATEdisplay()
             {
                 tcnt = 0;
 
-                //温湿度传感器电池电量正常时显示温湿度
-                if (!batLow)
+                VFDWriteStrAndShow(1, "      ");
+                if (disflag)
                 {
-                    VFDWriteStrAndShow(1, "      ");
-                    if (disflag)
-                    {
-                        disflag = false;
-                        distemp = td;
-                        distemp = distemp / 100;
-                        sprintf(str, "%.1fC", distemp);
-                        VFDWriteStrAndShow(1, str);
-                    }
-                    else
-                    {
-                        disflag = true;
-                        distemp = hd;
-                        distemp = distemp / 100;
-                        sprintf(str, "%.1f%%", distemp);
-                        VFDWriteStrAndShow(1, str);
-                    }
+                    disflag = false;
+                    distemp = td;
+                    distemp = distemp / 100;
+                    sprintf(str, "%.1fC", distemp);
+                    VFDWriteStrAndShow(1, str);
                 }
                 else
                 {
-                    //显示低电量
-                    VFDWriteStrAndShow(1, "LowBat");
+                    disflag = true;
+                    distemp = hd;
+                    distemp = distemp / 100;
+                    sprintf(str, "%.1f%%", distemp);
+                    VFDWriteStrAndShow(1, str);
                 }
             }
         }
@@ -938,7 +927,7 @@ void time_calibration()
 {
     DisappearingAnimation(); //显示消失动画
     VFDWriteStrAndShow(0, "Get time");
-    // wifi_sta_start();//开启sta
+    wifi_sta_start(); //开启sta
     // http_time_get();//获取时间
     //时间显示
     time(&now); //获取时间戳
@@ -976,20 +965,6 @@ void ifAlarm()
         {
             bz_dat = DIDI;
             xQueueSend(bz_queue, &bz_dat, 0); //给蜂鸣器任务
-        }
-    }
-
-    //电池低电量提醒
-    if (bd == 0)
-    {
-        if (THDATE) batLow = true;
-    }
-    else
-    {
-        if (batLow)
-        {
-            batLow = false;
-            if (batLow) VFDWriteStrAndShow(1, "      ");
         }
     }
 }
@@ -1110,8 +1085,8 @@ void clock_funtion_task(void* parameter)
     if (KeyEventHandle == NULL)
         ESP_LOGE(TAG, "Key event create fail!");
 
-    if (!standbyAtNightFlag) VFDWriteStrAndShow(1, "connet WIFI"); //夜间关显示待机下不显示连接wifi
-    // wifi_sta_start(); //开启wifi连接路由器
+    if (!standbyAtNightFlag) VFDWriteStrAndShow(1, "connect WIFI"); //夜间关显示待机下不显示连接wifi
+    wifi_sta_start(); //开启wifi连接路由器
     // http_time_get(); //获取时间并校准时间
     DisappearingAnimation(); //显示消失动画
     // ble_scan_task_init();//初始化BLE广播扫描任务
