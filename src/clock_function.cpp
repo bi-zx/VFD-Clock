@@ -27,6 +27,7 @@
 #include "key_driver.h"
 #include "measuring_lightIntensity.h"
 #include "buzzer_driver.h"
+#include "iic_driver.h"
 
 static const char* TAG = "clock function";
 EventGroupHandle_t KeyEventHandle = NULL; //按键事件消息队列句柄
@@ -1068,6 +1069,7 @@ void clock_funtion_task(void* parameter)
     EventBits_t k_Event;
 
     ADCInit(); //ADC初始化
+    iic_init();//IIC总线初始化
     key_init(); //按键初始化
     buzzer_init(); //蜂鸣器初始化
     bz_dat = DDIDI;
@@ -1116,18 +1118,21 @@ void clock_funtion_task(void* parameter)
         else if (k_Event & key2_event) key2_Action();
         else if (k_Event & key3_event) key3_Action();
 
-        // //广播扫描任务的消息队列接收
-        // ret_q = xQueueReceive(adv_data_queue,adv_dat_rev,0);
-        // if(ret_q)//接收到消息后存下
-        // {
-        // 	td = adv_dat_rev[0]*256 + adv_dat_rev[1];
-        // 	hd = adv_dat_rev[2]*256 + adv_dat_rev[3];
-        // 	bd = adv_dat_rev[4];
-        //
-        // 	ifAlarm();
-        //
-        // 	recflag = true;
-        // }
+        //读取 AHT10 传感器数据
+        float temperature, humidity;
+        if (aht10_read(&temperature, &humidity))
+        {
+            // 转换为原有格式：温度和湿度都放大100倍以保持精度
+            td = (signed short)(temperature * 100);
+            hd = (unsigned short)(humidity * 100);
+            
+            ifAlarm();
+            recflag = true;
+        }
+        else
+        {
+            recflag = false;
+        }
 
         //时间显示 : : 闪烁
         if ((!standbyAtNightFlag) & dotBlinkFlag)
