@@ -1,19 +1,3 @@
-// #include "esp_system.h"
-// #include "esp_wifi.h"
-// #include "esp_event.h"
-// #include "esp_log.h"
-//
-// #include "lwip/err.h"
-// #include "lwip/sockets.h"
-// #include "lwip/sys.h"
-// #include "lwip/netdb.h"
-// #include "lwip/dns.h"
-//
-// #include "esp_netif.h"
-// #include "esp_tls.h"
-// #include "esp_http_client.h"
-// #include "cJSON.h"
-
 /* HTTP GET Example using Arduino HTTP Client
  *
  * This example code is in the Public Domain (or CC0 licensed, at your option.)
@@ -33,7 +17,7 @@
 #include <ArduinoJson.h>
 
 #include "http_request.h"
-#include <time.h>
+#include <ctime>
 #include <sys/time.h>
 
 static const char* TAG = "HTTP_CLIENT";
@@ -154,82 +138,82 @@ void http_time_get()
     http.end();
 }
 
-QueueHandle_t http_get_event_queue;
-
-/* 设置HTTP请求类型 */
-void http_set_type(HTTP_GET_TYPE_E type)
-{
-    HTTP_GET_EVENT_T evt;
-    evt.type = type;
-    xQueueSend(http_get_event_queue, &evt, 10);
-}
-
-/* HTTP请求任务 */
-static void http_get_task(void* pvParameters)
-{
-    HTTP_GET_EVENT_T evt;
-
-    while (1)
-    {
-        // 检查队列中是否有新的请求类型
-        if (xQueueReceive(http_get_event_queue, &evt, 0) == pdTRUE)
-        {
-            switch (evt.type)
-            {
-            case HTTP_GET_TIME:
-                Serial.println("[INFO] 执行时间获取请求");
-                http_time_get();
-                break;
-            case HTTP_GET_WEATHER:
-                Serial.println("[INFO] 执行天气获取请求");
-            // 实现天气获取功能
-                break;
-            case HTTP_GET_FANS:
-                Serial.println("[INFO] 执行粉丝数获取请求");
-            // 实现粉丝数获取功能
-                break;
-            case HTTP_GET_CITY:
-                Serial.println("[INFO] 执行城市获取请求");
-            // 实现城市获取功能
-                break;
-            default:
-                break;
-            }
-        }
-
-        // 定期检查时间同步状态
-        if (set_time_flag == 1)
-        {
-            set_time_flag = 0;
-            Serial.println("[INFO] 时间同步已完成");
-        }
-
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-
-    vTaskDelete(NULL);
-    Serial.println("[INFO] HTTP获取任务已关闭");
-}
-
-/* 初始化HTTP请求模块 */
-void http_request_init()
-{
-    Serial.println("[INFO] 初始化HTTP请求模块");
-    http_get_event_queue = xQueueCreate(10, sizeof(HTTP_GET_EVENT_T));
-    if (http_get_event_queue == NULL)
-    {
-        Serial.println("[ERROR] 创建HTTP请求队列失败");
-        return;
-    }
-
-    xTaskCreate(
-        http_get_task, // 任务函数
-        "http_get_task", // 任务名称
-        4096, // 堆栈大小
-        NULL, // 任务参数
-        5, // 任务优先级
-        NULL // 任务句柄
-    );
-
-    Serial.println("[INFO] HTTP请求模块初始化完成");
-}
+// QueueHandle_t http_get_event_queue;
+//
+// /* 设置HTTP请求类型 */
+// void http_set_type(HTTP_GET_TYPE_E type)
+// {
+//     HTTP_GET_EVENT_T evt;
+//     evt.type = type;
+//     xQueueSend(http_get_event_queue, &evt, 10);
+// }
+//
+// /* HTTP请求任务 */
+// static void http_get_task(void* pvParameters)
+// {
+//     HTTP_GET_EVENT_T evt;
+//
+//     while (1)
+//     {
+//         // 检查队列中是否有新的请求类型
+//         if (xQueueReceive(http_get_event_queue, &evt, 0) == pdTRUE)
+//         {
+//             switch (evt.type)
+//             {
+//             case HTTP_GET_TIME:
+//                 Serial.println("[INFO] 执行时间获取请求");
+//                 http_time_get();
+//                 break;
+//             case HTTP_GET_WEATHER:
+//                 Serial.println("[INFO] 执行天气获取请求");
+//             // 实现天气获取功能
+//                 break;
+//             case HTTP_GET_FANS:
+//                 Serial.println("[INFO] 执行粉丝数获取请求");
+//             // 实现粉丝数获取功能
+//                 break;
+//             case HTTP_GET_CITY:
+//                 Serial.println("[INFO] 执行城市获取请求");
+//             // 实现城市获取功能
+//                 break;
+//             default:
+//                 break;
+//             }
+//         }
+//
+//         // 定期检查时间同步状态
+//         if (set_time_flag == 1)
+//         {
+//             set_time_flag = 0;
+//             Serial.println("[INFO] 时间同步已完成");
+//         }
+//
+//         vTaskDelay(1000 / portTICK_PERIOD_MS);
+//     }
+//
+//     vTaskDelete(NULL);
+//     Serial.println("[INFO] HTTP获取任务已关闭");
+// }
+//
+// /* 初始化HTTP请求模块 */
+// void http_request_init()
+// {
+//     Serial.println("[INFO] 初始化HTTP请求模块");
+//     http_get_event_queue = xQueueCreate(10, sizeof(HTTP_GET_EVENT_T));
+//     if (http_get_event_queue == NULL)
+//     {
+//         Serial.println("[ERROR] 创建HTTP请求队列失败");
+//         return;
+//     }
+//
+//     xTaskCreate(
+//         http_get_task, // 任务函数
+//         "http_get_task", // 任务名称
+//         4096, // 堆栈大小
+//         NULL, // 任务参数
+//         5, // 任务优先级
+//         NULL // 任务句柄
+//     );
+//
+//     Serial.println("[INFO] HTTP请求模块初始化完成");
+// }

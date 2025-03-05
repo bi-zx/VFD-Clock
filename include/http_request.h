@@ -15,8 +15,8 @@ typedef struct
     HTTP_GET_TYPE_E type;
 } HTTP_GET_EVENT_T;
 
-void http_request_init();
+// void http_request_init();
 void http_time_get();
-void http_set_type(HTTP_GET_TYPE_E type);
+// void http_set_type(HTTP_GET_TYPE_E type);
 
 #endif
