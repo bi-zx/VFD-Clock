@@ -1,9 +1,13 @@
 #ifndef _configuration_H
 #define _configuration_H
 
-// WIFI名称、密码
+// STA模式连接的WIFI名称、密码
 #define ESP_WIFI_SSID "ZTE-AX3000"
 #define ESP_WIFI_PASS "0000011111"
+
+#define AP_SSID     "VFD-Clock"    // AP模式的SSID
+#define AP_PASSWORD "12345678"     // AP模式的密码
+#define AP_MAX_CONN 4              // AP模式最大连接数
 
 // 多少点校时 的时间
 #define TCALIBRATION 01 // 凌晨1点

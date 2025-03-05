@@ -20,7 +20,7 @@
 #include "clock_function.h"
 #include "configuration.h"
 // #include "http_request.h"
-// #include "wifi_sta.h"
+#include "wifi_control.h"
 #include <esp32-hal-gpio.h>
 
 #include "fs_info_RW.h"
