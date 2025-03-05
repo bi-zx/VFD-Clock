@@ -13,7 +13,6 @@
 #define LEDC_FREQUENCY4KHZ    (4000) // 4KHz
 
 QueueHandle_t bz_queue = NULL;
-static const char* tag = "Buzzer driver";
 
 static void ledc_init()
 {

@@ -10,24 +10,20 @@
 #include "freertos/portmacro.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
-#include "driver/gpio.h"
 #include "sys/unistd.h"
-#include "driver/ledc.h"
-#include "esp_err.h"
-#include "esp_log.h"
-#include "FontLibrary.h"
+
 #include "13ST84GINK.h"
+#include "buzzer_driver.h"
 #include "clock_function.h"
 #include "configuration.h"
-#include "http_request.h"
-#include "wifi_control.h"
-#include <esp32-hal-gpio.h>
-
+#include "FontLibrary.h"
 #include "fs_info_RW.h"
+#include "http_request.h"
+#include "iic_driver.h"
 #include "key_driver.h"
 #include "measuring_lightIntensity.h"
-#include "buzzer_driver.h"
-#include "iic_driver.h"
+#include "wifi_control.h"
+
 
 static const char* TAG = "clock function";
 EventGroupHandle_t KeyEventHandle = NULL; //按键事件消息队列句柄
@@ -876,8 +872,6 @@ void StartEinstellen()
     memset(randomNumNow, 0x00, 5); //初始化G1以及AD标 的 显示动画函数随机数缓存
     memset(randomNumLast, 0x00, 5); //初始化G1以及AD标 的 显示动画函数随机数缓存
 
-    //esp_log_level_set("*", ESP_LOG_INFO);//设置信息打印等级
-
     //判断是否为第一次启动  否 则写入初始设置
     if (fs_StartEinstellen_information_read(StartEinstellenBuf, 10) != ESP_OK)
     {
@@ -1040,7 +1034,6 @@ void key3_Action()
 
         if (THDATE)
         {
-            // ble_scan_off();//关闭ble广播扫描
             VFDWriteStrAndShow(1, "      ");
             //显示日期 0代表1月 所以月+1
             monTemp = timeinfo.tm_mon + 1;
@@ -1051,7 +1044,6 @@ void key3_Action()
         }
         else
         {
-            // ble_scan_on();//打开ble广播扫描
             StartEinstellenBuf[4] = 1;
             recflag = false;
             THDATE = true;
@@ -1069,7 +1061,7 @@ void clock_funtion_task(void* parameter)
     EventBits_t k_Event;
 
     ADCInit(); //ADC初始化
-    iic_init();//IIC总线初始化
+    iic_init(); //IIC总线初始化
     key_init(); //按键初始化
     buzzer_init(); //蜂鸣器初始化
     bz_dat = DDIDI;
@@ -1091,7 +1083,6 @@ void clock_funtion_task(void* parameter)
     wifi_sta_start(); //开启wifi连接路由器
     http_time_get(); //获取时间并校准时间
     DisappearingAnimation(); //显示消失动画
-    // ble_scan_task_init();//初始化BLE广播扫描任务
 
     //时间显示
     time(&now); //获取时间戳
@@ -1099,11 +1090,7 @@ void clock_funtion_task(void* parameter)
     if (!standbyAtNightFlag) RefreshTimeShow(&timeinfo); //夜间关显示待机下不刷新时间显示
     lastSec = timeinfo.tm_sec;
 
-    if (THDATE)
-    {
-        // ble_scan_on();//开始扫描广播
-    }
-    else
+    if (!THDATE)
     {
         //显示日期 0代表1月 所以月+1
         monTemp = timeinfo.tm_mon + 1;
@@ -1122,10 +1109,10 @@ void clock_funtion_task(void* parameter)
         float temperature, humidity;
         if (aht10_read(&temperature, &humidity))
         {
-            // 转换为原有格式：温度和湿度都放大100倍以保持精度
+            // 转换为原有格式, 温度和湿度都放大100倍以保持精度
             td = (signed short)(temperature * 100);
             hd = (unsigned short)(humidity * 100);
-            
+
             ifAlarm();
             recflag = true;
         }
@@ -1203,10 +1190,7 @@ void clock_funtion_task(void* parameter)
                     //检测是否到时间 联网校时
                     if (timeinfo.tm_sec == calibrationTime)
                     {
-                        // ble_scan_off();//关闭ble广播扫描
-                        vTaskDelay(500 / portTICK_PERIOD_MS);
                         http_time_get(); //获取时间并校准时间
-                        // ble_scan_on();//开启ble广播扫描
                         time(&now); //获取时间戳
                         localtime_r(&now, &timeinfo); //时间戳转成时间结构体
                         RefreshTimeShow(&timeinfo); //刷新时间显示
@@ -1238,11 +1222,8 @@ void clock_funtion_task(void* parameter)
                         VFDPowerCtrl(1); //打开VFD电源
                         VFDDStandby(0); //VFD屏退出待机
 
-                        // ble_scan_off();//关闭ble广播扫描
-                        vTaskDelay(500 / portTICK_PERIOD_MS);
                         ESP_LOGI(TAG, "exit standby at night.");
                         http_time_get(); //获取时间并校准时间
-                        // ble_scan_on();//开启ble广播扫描
                         time(&now); //获取时间戳
                         localtime_r(&now, &timeinfo); //时间戳转成时间结构体
                         RefreshTimeShow(&timeinfo); //刷新时间显示

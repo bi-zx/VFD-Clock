@@ -20,7 +20,6 @@
 #include <ctime>
 #include <sys/time.h>
 
-static const char* TAG = "HTTP_CLIENT";
 
 //https://acs.m.taobao.com/gw/mtop.common.getTimestamp/ //美团获取时间api接口2
 //https://cube.meituan.com/ipromotion/cube/toc/component/base/getServerCurrentTime //美团获取时间api接口

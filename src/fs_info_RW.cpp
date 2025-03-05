@@ -9,8 +9,6 @@
 #include "LittleFS.h"
 #include "fs_info_RW.h"
 
-static const char* TAG = "fs info R/W";
-
 FS_INFO_E StartEinstellen_config_flag = FS_StartEinstellen_INFO_NULL;
 
 // 配置文件路径

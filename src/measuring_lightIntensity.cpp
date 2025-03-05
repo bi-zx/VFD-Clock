@@ -6,7 +6,6 @@
 #include "measuring_lightIntensity.h"
 #include "configuration.h"
 
-static const char* TAG = "measuring lightIntensity";
 #define DEFAULT_VREF    1100        // 使用默认参考电压
 #define NO_OF_SAMPLES   5          // 多重采样次数
 
