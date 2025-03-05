@@ -928,7 +928,7 @@ void time_calibration()
     DisappearingAnimation(); //显示消失动画
     VFDWriteStrAndShow(0, "Get time");
     wifi_sta_start(); //开启sta
-    // http_time_get();//获取时间
+    http_time_get(); //获取时间
     //时间显示
     time(&now); //获取时间戳
     localtime_r(&now, &timeinfo); //时间戳转成时间结构体
@@ -1087,7 +1087,7 @@ void clock_funtion_task(void* parameter)
 
     if (!standbyAtNightFlag) VFDWriteStrAndShow(1, "connect WIFI"); //夜间关显示待机下不显示连接wifi
     wifi_sta_start(); //开启wifi连接路由器
-    // http_time_get(); //获取时间并校准时间
+    http_time_get(); //获取时间并校准时间
     DisappearingAnimation(); //显示消失动画
     // ble_scan_task_init();//初始化BLE广播扫描任务
 

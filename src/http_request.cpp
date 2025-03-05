@@ -212,7 +212,7 @@ static void http_get_task(void* pvParameters)
 }
 
 /* 初始化HTTP请求模块 */
-void http_request_init(void)
+void http_request_init()
 {
     Serial.println("[INFO] 初始化HTTP请求模块");
     http_get_event_queue = xQueueCreate(10, sizeof(HTTP_GET_EVENT_T));
