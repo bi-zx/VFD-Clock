@@ -12,9 +12,12 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
-
+#include "ElegantOTA.h"
+#include <WebServer.h>
 #include "wifi_control.h"
 #include "configuration.h"
+
+WebServer server(80);
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
@@ -85,6 +88,44 @@ static void wifi_event_handler(WiFiEvent_t event, WiFiEventInfo_t info)
         break;
     }
 }
+
+void ota_init()
+{
+    // 基础网页
+    server.on("/", HTTP_GET, []()
+    {
+        String html = "<html><body>";
+        html += "<h1>VFD Clock OTA Update</h1>";
+        html += "<p>Current IP: ";
+        // 根据当前模式显示正确的IP
+        if (WiFi.getMode() == WIFI_AP)
+        {
+            html += WiFi.softAPIP().toString();
+        }
+        else
+        {
+            html += WiFi.localIP().toString();
+        }
+        html += "</p>";
+        html += "<p><a href='/update'>Click here to update firmware</a></p>";
+        html += "</body></html>";
+        server.send(200, "text/html", html);
+    });
+
+    // 添加一个简单的响应测试页面
+    server.on("/test", HTTP_GET, []()
+    {
+        server.send(200, "text/plain", "Server is running!");
+    });
+
+    // 启动 ElegantOTA
+    ElegantOTA.begin(&server);
+
+    // 开启服务器
+    server.begin();
+    Serial.println("[INFO] HTTP server started");
+}
+
 void wifi_init_sta()
 {
     s_wifi_event_group = xEventGroupCreate();
@@ -96,20 +137,20 @@ void wifi_init_sta()
 
     // 设置较短的超时时间（10秒）
     EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
-                                          WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-                                          pdFALSE,
-                                          pdFALSE,
-                                          10000 / portTICK_PERIOD_MS);
+                                           WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+                                           pdFALSE,
+                                           pdFALSE,
+                                           10000 / portTICK_PERIOD_MS);
 
     if (bits & WIFI_CONNECTED_BIT)
     {
         Serial.printf("connected to ap SSID:%s password:%s\n",
-                     ESP_WIFI_SSID, ESP_WIFI_PASS);
+                      ESP_WIFI_SSID, ESP_WIFI_PASS);
     }
     else
     {
         Serial.printf("Failed to connect to SSID:%s, password:%s\n",
-                     ESP_WIFI_SSID, ESP_WIFI_PASS);
+                      ESP_WIFI_SSID, ESP_WIFI_PASS);
         // 连接失败，停止 STA 模式
         wifi_sta_stop();
     }
@@ -131,7 +172,7 @@ void wifi_init_ap()
         Serial.println("AP Mode Configured Successfully");
         Serial.print("AP IP address: ");
         Serial.println(WiFi.softAPIP());
-        Serial.printf("wifi_init_ap finished. SSID:%s password:%s\n", AP_SSID, AP_PASSWORD);
+        Serial.printf("wifi_init_ap finished.\nSSID:%s PASSWORD:%s\n", AP_SSID, AP_PASSWORD);
     }
     else
     {

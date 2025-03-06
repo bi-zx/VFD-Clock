@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <WiFi.h>
 #include <cstdio>
 #include <ctime>
 #include <cstring>
@@ -11,6 +12,8 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "sys/unistd.h"
+#include "ElegantOTA.h"
+#include <WebServer.h>
 
 #include "13ST84GINK.h"
 #include "buzzer_driver.h"
@@ -1065,8 +1068,6 @@ void key3_Action()
 void clock_funtion_task(void* parameter)
 {
     unsigned char nowSec, lastSec;
-    unsigned char adv_dat_rev[5];
-    int ret_q;
     EventBits_t k_Event;
 
     ADCInit(); //ADC初始化
@@ -1097,8 +1098,30 @@ void clock_funtion_task(void* parameter)
         if (!standbyAtNightFlag)
         {
             VFDWriteStrAndShow(1, "  WIFI OK   ");
-            vTaskDelay(2000 / portTICK_PERIOD_MS);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
             VFDWriteStrAndShow(1, "            ");
+
+            String ip = WiFi.localIP().toString();
+            if (ip.length() <= 12)
+            {
+                VFDWriteStrAndShow(1, ip.c_str());
+                vTaskDelay(2000 / portTICK_PERIOD_MS);
+                VFDWriteStrAndShow(1, "            ");
+            }
+            else
+            {
+                // IP地址超过12位，分两次显示
+                String ip_part1 = ip.substring(0, 12);
+                String ip_part2 = ip.substring(12);
+
+                VFDWriteStrAndShow(1, ip_part1.c_str());
+                vTaskDelay(2000 / portTICK_PERIOD_MS);
+                VFDWriteStrAndShow(1, "            ");
+
+                VFDWriteStrAndShow(1, ip_part2.c_str());
+                vTaskDelay(2000 / portTICK_PERIOD_MS);
+                VFDWriteStrAndShow(1, "            ");
+            }
         }
         http_time_get(); //获取时间并校准时间
         rtc_time_set(); // 更新RTC时间
@@ -1107,6 +1130,7 @@ void clock_funtion_task(void* parameter)
     {
         // WiFi连接失败，切换到AP模式
         wifi_sta_stop(); // 停止STA模式
+        wifi_ap_start(); // 启动AP模式
         if (!standbyAtNightFlag)
         {
             VFDWriteStrAndShow(1, " WIFI FAIL  ");
@@ -1120,14 +1144,36 @@ void clock_funtion_task(void* parameter)
             VFDWriteStrAndShow(1, AP_PASSWORD); // 显示AP名称
             vTaskDelay(2000 / portTICK_PERIOD_MS);
             VFDWriteStrAndShow(1, "            ");
+
+            String ip = WiFi.softAPIP().toString();
+            if (ip.length() <= 12)
+            {
+                VFDWriteStrAndShow(1, ip.c_str());
+                vTaskDelay(2000 / portTICK_PERIOD_MS);
+                VFDWriteStrAndShow(1, "            ");
+            }
+            else
+            {
+                // IP地址超过12位，分两次显示
+                String ip_part1 = ip.substring(0, 12);
+                String ip_part2 = ip.substring(12);
+
+                VFDWriteStrAndShow(1, ip_part1.c_str());
+                vTaskDelay(2000 / portTICK_PERIOD_MS);
+                VFDWriteStrAndShow(1, "            ");
+
+                VFDWriteStrAndShow(1, ip_part2.c_str());
+                vTaskDelay(2000 / portTICK_PERIOD_MS);
+                VFDWriteStrAndShow(1, "            ");
+            }
         }
-        wifi_ap_start(); // 启动AP模式
         // 从 RTC 获取时间
         if (rtc_time_get())
         {
             Serial.println("[INFO] 从RTC获取时间成功");
         }
     }
+    ota_init();
 
     //时间显示
     time(&now); //获取时间戳
@@ -1144,6 +1190,12 @@ void clock_funtion_task(void* parameter)
     }
     while (1)
     {
+        // 处理 Web 服务器请求
+        server.handleClient();
+
+        // 处理 OTA 更新
+        ElegantOTA.loop();
+
         //按键 事件处理
         k_Event = xEventGroupWaitBits(KeyEventHandle, 0x0f,pdTRUE,pdFALSE, 10 / portTICK_PERIOD_MS);
         if (k_Event & key1_event) key1_Action();

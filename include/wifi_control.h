@@ -3,6 +3,12 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <WebServer.h>
+
+extern WebServer server;
+
+// OTA 初始化函数
+void ota_init();
 
 // WiFi Station 模式函数
 void wifi_sta_start();
