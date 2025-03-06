@@ -16,8 +16,6 @@
 #include "wifi_control.h"
 #include "configuration.h"
 
-#define EXAMPLE_ESP_MAXIMUM_RETRY  CONFIG_ESP_MAXIMUM_RETRY
-
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
 
@@ -49,8 +47,17 @@ static void wifi_event_handler(WiFiEvent_t event, WiFiEventInfo_t info)
 
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
         Serial.println("Disconnected from WiFi access point");
-        Serial.println("retry to connect to the AP");
-        WiFi.begin(ESP_WIFI_SSID, ESP_WIFI_PASS);
+        if (s_retry_num < CONFIG_ESP_MAXIMUM_RETRY)
+        {
+            WiFi.begin(ESP_WIFI_SSID, ESP_WIFI_PASS);
+            s_retry_num++;
+            Serial.printf("Retrying to connect... (%d/%d)\n",
+                          s_retry_num, CONFIG_ESP_MAXIMUM_RETRY);
+        }
+        else
+        {
+            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+        }
         break;
 
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
@@ -88,35 +95,28 @@ void wifi_init_sta()
 
     // 设置WiFi模式为Station
     WiFi.mode(WIFI_STA);
-
-    // 开始连接WiFi
     WiFi.begin(ESP_WIFI_SSID, ESP_WIFI_PASS);
 
     Serial.println("wifi_init_sta finished.");
 
-    /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
-     * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
+    // 设置较短的超时时间（10秒）
     EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
                                            WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
                                            pdFALSE,
                                            pdFALSE,
-                                           portMAX_DELAY);
+                                           10000 / portTICK_PERIOD_MS);
 
-    /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
-     * happened. */
     if (bits & WIFI_CONNECTED_BIT)
     {
         Serial.printf("connected to ap SSID:%s password:%s\n",
                       ESP_WIFI_SSID, ESP_WIFI_PASS);
     }
-    else if (bits & WIFI_FAIL_BIT)
+    else
     {
         Serial.printf("Failed to connect to SSID:%s, password:%s\n",
                       ESP_WIFI_SSID, ESP_WIFI_PASS);
-    }
-    else
-    {
-        Serial.println("UNEXPECTED EVENT");
+        // 连接失败，停止 WiFi
+        wifi_sta_stop();
     }
 }
 

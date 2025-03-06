@@ -5,6 +5,9 @@
 #define ESP_WIFI_SSID "ZTE-AX3000"
 #define ESP_WIFI_PASS "0000011111"
 
+// STA模式连接WIFI失败时最大重试次数
+#define CONFIG_ESP_MAXIMUM_RETRY 3
+
 #define AP_SSID     "VFD-Clock"    // AP模式的SSID
 #define AP_PASSWORD "12345678"     // AP模式的密码
 #define AP_MAX_CONN 4              // AP模式最大连接数

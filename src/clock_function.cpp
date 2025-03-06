@@ -923,7 +923,16 @@ void time_calibration()
     DisappearingAnimation(); //显示消失动画
     VFDWriteStrAndShow(0, "Get time");
     wifi_sta_start(); //开启sta
-    http_time_get(); //获取时间
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        http_time_get(); //获取时间
+        rtc_time_set(); // 更新RTC时间
+    }
+    else
+    {
+        // 网络不可用时，尝试从RTC获取时间
+        rtc_time_get();
+    }
     //时间显示
     time(&now); //获取时间戳
     localtime_r(&now, &timeinfo); //时间戳转成时间结构体
@@ -1069,6 +1078,7 @@ void clock_funtion_task(void* parameter)
     StartEinstellen(); //开机设置
     BootAnimation(); //开机动画
 
+
     //把设置的标志位显示
     WriteCGRAM(6, &dispalyTemp[6][0]); //把G1显示缓存写入CGRAM
     VFDWriteOneDIYCharAndShow(0, 6); //把CGRAM 6的缓存显示到G1上
@@ -1081,7 +1091,19 @@ void clock_funtion_task(void* parameter)
 
     if (!standbyAtNightFlag) VFDWriteStrAndShow(1, "connect WIFI"); //夜间关显示待机下不显示连接wifi
     wifi_sta_start(); //开启wifi连接路由器
-    http_time_get(); //获取时间并校准时间
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        http_time_get(); //获取时间并校准时间
+        rtc_time_set(); // 更新RTC时间
+    }
+    else
+    {
+        // 从 RTC 获取时间
+        if (rtc_time_get())
+        {
+            Serial.println("[INFO] 从RTC获取时间成功");
+        }
+    }
     DisappearingAnimation(); //显示消失动画
 
     //时间显示
@@ -1190,7 +1212,16 @@ void clock_funtion_task(void* parameter)
                     //检测是否到时间 联网校时
                     if (timeinfo.tm_sec == calibrationTime)
                     {
-                        http_time_get(); //获取时间并校准时间
+                        if (WiFi.status() == WL_CONNECTED)
+                        {
+                            http_time_get(); //获取时间并校准时间
+                            rtc_time_set(); // 更新RTC时间
+                        }
+                        else
+                        {
+                            // 网络不可用时，尝试从RTC获取时间
+                            rtc_time_get();
+                        }
                         time(&now); //获取时间戳
                         localtime_r(&now, &timeinfo); //时间戳转成时间结构体
                         RefreshTimeShow(&timeinfo); //刷新时间显示
@@ -1223,7 +1254,15 @@ void clock_funtion_task(void* parameter)
                         VFDDStandby(0); //VFD屏退出待机
 
                         ESP_LOGI(TAG, "exit standby at night.");
-                        http_time_get(); //获取时间并校准时间
+                        if (WiFi.status() == WL_CONNECTED)
+                        {
+                            http_time_get(); //获取时间并校准时间
+                            rtc_time_set(); // 更新RTC时间
+                        }
+                        else
+                        {
+                            rtc_time_get(); // 从RTC获取时间
+                        }
                         time(&now); //获取时间戳
                         localtime_r(&now, &timeinfo); //时间戳转成时间结构体
                         RefreshTimeShow(&timeinfo); //刷新时间显示
