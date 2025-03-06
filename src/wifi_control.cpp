@@ -9,6 +9,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <cstring>
+#include <ArduinoJson.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
@@ -17,8 +18,12 @@
 #include <WebServer.h>
 #include "wifi_control.h"
 #include "configuration.h"
+#include "fs_info_RW.h"
 
 WebServer server(80);
+
+const char* wifi_ssid;
+const char* wifi_pswd;
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
@@ -37,12 +42,21 @@ static uint8_t ap_start_status = 0;
 static void wifi_event_handler(WiFiEvent_t event, WiFiEventInfo_t info)
 {
     Serial.printf("-----------%d event\n", event);
+    wifi_info_config_t wifi_config;
+    // 尝试读取保存的 WiFi 配置
+    if (fs_wifi_information_read(&wifi_config, sizeof(wifi_info_config_t)) == FS_WIFI_INFO_SAVE)
+    {
+        // 使用保存的配置
+        wifi_ssid = (char*)wifi_config.ssid;
+        wifi_pswd = (char*)wifi_config.password;
+        Serial.println("[INFO] Using saved WiFi configuration");
+    }
 
     switch (event)
     {
     case ARDUINO_EVENT_WIFI_STA_START:
         Serial.println("Station Mode Started");
-        WiFi.begin(ESP_WIFI_SSID, ESP_WIFI_PASS);
+        WiFi.begin(wifi_ssid, wifi_pswd);
         break;
 
     case ARDUINO_EVENT_WIFI_STA_CONNECTED:
@@ -53,7 +67,7 @@ static void wifi_event_handler(WiFiEvent_t event, WiFiEventInfo_t info)
         Serial.println("Disconnected from WiFi access point");
         if (s_retry_num < CONFIG_ESP_MAXIMUM_RETRY)
         {
-            WiFi.begin(ESP_WIFI_SSID, ESP_WIFI_PASS);
+            WiFi.begin(wifi_ssid, wifi_pswd);
             s_retry_num++;
             Serial.printf("Retrying to connect... (%d/%d)\n",
                           s_retry_num, CONFIG_ESP_MAXIMUM_RETRY);
@@ -102,7 +116,48 @@ void ota_init()
             file.close();
         }
     });
+    // 添加保存 WiFi 配置的路由
+    server.on("/save-wifi", HTTP_POST, []()
+    {
+        String data = server.arg("plain");
+        JsonDocument doc;
+        DeserializationError error = deserializeJson(doc, data);
 
+        if (error)
+        {
+            server.send(400, "text/plain", "JSON解析错误");
+            return;
+        }
+
+        const char* ssid = doc["ssid"];
+        const char* password = doc["password"];
+
+        // 验证 SSID 和密码
+        if (!ssid || strlen(ssid) == 0 || strlen(ssid) > 31)
+        {
+            server.send(400, "text/plain", "SSID 无效");
+            return;
+        }
+
+        if (!password || strlen(password) > 63)
+        {
+            server.send(400, "text/plain", "密码无效");
+            return;
+        }
+        // 创建配置结构体
+        wifi_info_config_t config;
+        memset(&config, 0, sizeof(wifi_info_config_t));
+        strlcpy((char*)config.ssid, ssid, sizeof(config.ssid));
+        strlcpy((char*)config.password, password, sizeof(config.password));
+        // 保存到文件系统
+        fs_wifi_information_write(&config, sizeof(wifi_info_config_t));
+        // 发送成功响应，并通知前端将要重启
+        server.send(200, "text/plain", "WiFi配置保存成功！设备将在3秒后重启...");
+
+        // 延迟3秒后重启，确保响应能够发送到客户端
+        delay(3000);
+        ESP.restart();
+    });
     // 启动 ElegantOTA
     ElegantOTA.begin(&server);
 
@@ -113,10 +168,37 @@ void ota_init()
 
 void wifi_init_sta()
 {
+    wifi_info_config_t wifi_config;
+    // 尝试读取保存的 WiFi 配置
+    FS_INFO_E read_result = fs_wifi_information_read(&wifi_config, sizeof(wifi_info_config_t));
+
+    if (read_result == FS_WIFI_INFO_SAVE)
+    {
+        // 验证配置有效性
+        if (strlen((char*)wifi_config.ssid) == 0 || strlen((char*)wifi_config.ssid) > 31)
+        {
+            Serial.println("[ERROR] Stored SSID invalid, using default configuration");
+            wifi_ssid = AP_SSID;
+            wifi_pswd = AP_PASSWORD;
+        }
+        else
+        {
+            // 使用保存的配置
+            wifi_ssid = (char*)wifi_config.ssid;
+            wifi_pswd = (char*)wifi_config.password;
+            Serial.println("[INFO] Using saved WiFi configuration");
+        }
+    }
+    else
+    {
+        Serial.println("[INFO] Using default WiFi configuration");
+        wifi_ssid = AP_SSID;
+        wifi_pswd = AP_PASSWORD;
+    }
     s_wifi_event_group = xEventGroupCreate();
     WiFi.onEvent(wifi_event_handler);
     WiFi.mode(WIFI_STA);
-    WiFi.begin(ESP_WIFI_SSID, ESP_WIFI_PASS);
+    WiFi.begin(wifi_ssid, wifi_pswd);
 
     Serial.println("wifi_init_sta finished.");
 
@@ -130,12 +212,12 @@ void wifi_init_sta()
     if (bits & WIFI_CONNECTED_BIT)
     {
         Serial.printf("connected to ap SSID:%s password:%s\n",
-                      ESP_WIFI_SSID, ESP_WIFI_PASS);
+                      wifi_ssid, wifi_pswd);
     }
     else
     {
         Serial.printf("Failed to connect to SSID:%s, password:%s\n",
-                      ESP_WIFI_SSID, ESP_WIFI_PASS);
+                      wifi_ssid, wifi_pswd);
         // 连接失败，停止 STA 模式
         wifi_sta_stop();
     }
@@ -224,12 +306,12 @@ void wifi_ap_stop()
     }
 }
 
-void wifi_disconnect()
-{
-    WiFi.disconnect();
-}
-
-void wifi_connect()
-{
-    WiFi.begin(ESP_WIFI_SSID, ESP_WIFI_PASS);
-}
+// void wifi_disconnect()
+// {
+//     WiFi.disconnect();
+// }
+//
+// void wifi_connect()
+// {
+//     WiFi.begin(wifi_ssid, wifi_pswd);
+// }

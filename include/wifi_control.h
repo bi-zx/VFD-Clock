@@ -13,8 +13,8 @@ void ota_init();
 // WiFi Station 模式函数
 void wifi_sta_start();
 void wifi_sta_stop();
-void wifi_disconnect();
-void wifi_connect();
+// void wifi_disconnect();
+// void wifi_connect();
 
 // WiFi AP 模式函数
 void wifi_ap_start();

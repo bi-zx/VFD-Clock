@@ -38,6 +38,22 @@
             background: #e9ecef;
             border-radius: 4px;
         }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .save-btn {
+            background: #28a745;
+        }
     </style>
 </head>
 <body>
@@ -47,12 +63,56 @@
             <p>设备IP: <span id="deviceIP"></span></p>
             <p>WiFi模式: <span id="wifiMode"></span></p>
         </div>
+        
+        <!-- 新增 WiFi 配置表单 -->
+        <form id="wifiForm" onsubmit="return saveWiFi(event)">
+            <div class="form-group">
+                <label for="ssid">WiFi SSID:</label>
+                <input type="text" id="ssid" name="ssid" required>
+            </div>
+            <div class="form-group">
+                <label for="password">WiFi Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="button save-btn">保存 WiFi 设置</button>
+        </form>
+        
         <p><a href="/update" class="button">固件更新</a></p>
     </div>
+
     <script>
         document.getElementById('deviceIP').textContent = window.location.host;
         document.getElementById('wifiMode').textContent = 
             window.location.host.startsWith('192.168.4.') ? 'AP模式' : 'STA模式';
+
+        function saveWiFi(event) {
+            event.preventDefault();
+            const ssid = document.getElementById('ssid').value;
+            const password = document.getElementById('password').value;
+            
+            fetch('/save-wifi', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ ssid, password })
+            })
+            .then(response => response.text())
+            .then(result => {
+                alert(result);
+                // 如果保存成功，等待设备重启
+                if(result.includes('成功')) {
+                    setTimeout(() => {
+                        // 5秒后刷新页面，给设备足够的重启时间
+                        location.reload();
+                    }, 5000);
+                }
+            })
+            .catch(error => {
+                alert('保存失败: ' + error);
+            });
+            return false;
+        }
     </script>
 </body>
 </html>

@@ -1,10 +1,6 @@
 #ifndef _configuration_H
 #define _configuration_H
 
-// STA模式连接的WIFI名称、密码
-#define ESP_WIFI_SSID "ZTE-AX3000"
-#define ESP_WIFI_PASS "0000011111"
-
 // STA模式连接WIFI失败时最大重试次数
 #define CONFIG_ESP_MAXIMUM_RETRY 3
 

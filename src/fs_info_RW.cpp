@@ -12,7 +12,7 @@
 FS_INFO_E StartEinstellen_config_flag = FS_StartEinstellen_INFO_NULL;
 
 // 配置文件路径
-// const char* WIFI_CONFIG_PATH = "/wifi_config.dat";
+const char* WIFI_CONFIG_PATH = "/wifi_config.json";
 const char* START_CONFIG_PATH = "/start_config.dat";
 
 /* 写入开机配置 */
@@ -83,25 +83,87 @@ FS_INFO_E fs_StartEinstellen_information_read(char* outBuf, uint8_t len)
     }
 }
 
-// /* 写入WiFi信息 */
-// void fs_wifi_information_write()
-// {
-//     // 实现WiFi信息写入
-//     // 这里需要根据您的具体需求实现
-//     Serial.println("[INFO] WiFi information write function called");
-// }
-//
-// /* 读取WiFi信息 */
-// FS_INFO_E fs_wifi_information_read()
-// {
-//     // 实现WiFi信息读取
-//     // 这里需要根据您的具体需求实现
-//     Serial.println("[INFO] WiFi information read function called");
-//
-//     if (!LittleFS.exists(WIFI_CONFIG_PATH)) {
-//         Serial.println("[INFO] No WiFi config file found");
-//         return FS_WIFI_INFO_NULL;
-//     }
-//
-//     return FS_WIFI_INFO_SAVE;
-// }
+void fs_wifi_information_write(wifi_info_config_t* config, size_t len)
+{
+    // 验证输入参数
+    if (!config || len != sizeof(wifi_info_config_t))
+    {
+        Serial.println("[ERROR] Invalid config parameters");
+        return;
+    }
+
+    // 验证 SSID 和密码长度
+    if (strlen((char*)config->ssid) == 0 || strlen((char*)config->ssid) > 31)
+    {
+        Serial.println("[ERROR] Invalid SSID length");
+        return;
+    }
+
+    if (strlen((char*)config->password) > 63)
+    {
+        Serial.println("[ERROR] Password too long");
+        return;
+    }
+
+    if (!LittleFS.begin(false))
+    {
+        Serial.println("[ERROR] Failed to mount LittleFS");
+        return;
+    }
+
+    File file = LittleFS.open(WIFI_CONFIG_PATH, "w");
+    if (!file)
+    {
+        Serial.println("[ERROR] Failed to open wifi config file for writing");
+        return;
+    }
+
+    size_t bytesWritten = file.write((uint8_t*)config, len);
+    file.close();
+
+    if (bytesWritten == len)
+    {
+        Serial.println("[INFO] WiFi config write done!");
+        Serial.printf("[INFO] Saved SSID: %s\n", config->ssid);
+    }
+    else
+    {
+        Serial.println("[ERROR] WiFi config write error!");
+    }
+}
+
+FS_INFO_E fs_wifi_information_read(wifi_info_config_t* config, size_t len)
+{
+    if (!LittleFS.begin(false))
+    {
+        Serial.println("[ERROR] Failed to mount LittleFS");
+        return FS_WIFI_INFO_ERROR;
+    }
+
+    if (!LittleFS.exists(WIFI_CONFIG_PATH))
+    {
+        Serial.println("[INFO] No WiFi config file found");
+        return FS_WIFI_INFO_NULL;
+    }
+
+    File file = LittleFS.open(WIFI_CONFIG_PATH, "r");
+    if (!file)
+    {
+        Serial.println("[ERROR] Failed to open wifi config file for reading");
+        return FS_WIFI_INFO_ERROR;
+    }
+
+    size_t bytesRead = file.read((uint8_t*)config, len);
+    file.close();
+
+    if (bytesRead == len)
+    {
+        Serial.println("[INFO] WiFi config read done!");
+        return FS_WIFI_INFO_SAVE;
+    }
+    else
+    {
+        Serial.println("[ERROR] WiFi config read error!");
+        return FS_WIFI_INFO_NULL;
+    }
+}
