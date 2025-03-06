@@ -85,15 +85,10 @@ static void wifi_event_handler(WiFiEvent_t event, WiFiEventInfo_t info)
         break;
     }
 }
-
 void wifi_init_sta()
 {
     s_wifi_event_group = xEventGroupCreate();
-
-    // 注册WiFi事件处理函数
     WiFi.onEvent(wifi_event_handler);
-
-    // 设置WiFi模式为Station
     WiFi.mode(WIFI_STA);
     WiFi.begin(ESP_WIFI_SSID, ESP_WIFI_PASS);
 
@@ -101,21 +96,21 @@ void wifi_init_sta()
 
     // 设置较短的超时时间（10秒）
     EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
-                                           WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-                                           pdFALSE,
-                                           pdFALSE,
-                                           10000 / portTICK_PERIOD_MS);
+                                          WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+                                          pdFALSE,
+                                          pdFALSE,
+                                          10000 / portTICK_PERIOD_MS);
 
     if (bits & WIFI_CONNECTED_BIT)
     {
         Serial.printf("connected to ap SSID:%s password:%s\n",
-                      ESP_WIFI_SSID, ESP_WIFI_PASS);
+                     ESP_WIFI_SSID, ESP_WIFI_PASS);
     }
     else
     {
         Serial.printf("Failed to connect to SSID:%s, password:%s\n",
-                      ESP_WIFI_SSID, ESP_WIFI_PASS);
-        // 连接失败，停止 WiFi
+                     ESP_WIFI_SSID, ESP_WIFI_PASS);
+        // 连接失败，停止 STA 模式
         wifi_sta_stop();
     }
 }

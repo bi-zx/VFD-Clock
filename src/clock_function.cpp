@@ -1091,20 +1091,43 @@ void clock_funtion_task(void* parameter)
 
     if (!standbyAtNightFlag) VFDWriteStrAndShow(1, "connect WIFI"); //夜间关显示待机下不显示连接wifi
     wifi_sta_start(); //开启wifi连接路由器
+    DisappearingAnimation(); //显示消失动画
     if (WiFi.status() == WL_CONNECTED)
     {
+        if (!standbyAtNightFlag)
+        {
+            VFDWriteStrAndShow(1, "  WIFI OK   ");
+            vTaskDelay(2000 / portTICK_PERIOD_MS);
+            VFDWriteStrAndShow(1, "            ");
+        }
         http_time_get(); //获取时间并校准时间
         rtc_time_set(); // 更新RTC时间
     }
     else
     {
+        // WiFi连接失败，切换到AP模式
+        wifi_sta_stop(); // 停止STA模式
+        if (!standbyAtNightFlag)
+        {
+            VFDWriteStrAndShow(1, " WIFI FAIL  ");
+            vTaskDelay(2000 / portTICK_PERIOD_MS);
+            VFDWriteStrAndShow(1, " AP MODE    ");
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            VFDWriteStrAndShow(1, "            ");
+            VFDWriteStrAndShow(1, AP_SSID); // 显示AP名称
+            vTaskDelay(2000 / portTICK_PERIOD_MS);
+            VFDWriteStrAndShow(1, "            ");
+            VFDWriteStrAndShow(1, AP_PASSWORD); // 显示AP名称
+            vTaskDelay(2000 / portTICK_PERIOD_MS);
+            VFDWriteStrAndShow(1, "            ");
+        }
+        wifi_ap_start(); // 启动AP模式
         // 从 RTC 获取时间
         if (rtc_time_get())
         {
             Serial.println("[INFO] 从RTC获取时间成功");
         }
     }
-    DisappearingAnimation(); //显示消失动画
 
     //时间显示
     time(&now); //获取时间戳
