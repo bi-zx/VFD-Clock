@@ -694,36 +694,31 @@ void G1AndADAnimation()
 void THDATEdisplay()
 {
     static unsigned char tcnt = 0;
-    static bool disflag = false;
     double distemp;
 
     if (THDATE) //温湿度显示
     {
         if (recflag)
         {
-            tcnt++;
-            if (tcnt >= 10)
+            VFDWriteStrAndShow(1, "      ");
+            if (tcnt >= 20) tcnt = 0;
+            uint32_t currentTime = millis();
+            // 每刷新10次, 在温度与湿度之间切换一次
+            if (tcnt < 10)
             {
-                tcnt = 0;
-
-                VFDWriteStrAndShow(1, "      ");
-                if (disflag)
-                {
-                    disflag = false;
-                    distemp = td;
-                    distemp = distemp / 100;
-                    sprintf(str, "%.1fC", distemp);
-                    VFDWriteStrAndShow(1, str);
-                }
-                else
-                {
-                    disflag = true;
-                    distemp = hd;
-                    distemp = distemp / 100;
-                    sprintf(str, "%.1f%%", distemp);
-                    VFDWriteStrAndShow(1, str);
-                }
+                distemp = td;
+                distemp = distemp / 100;
+                sprintf(str, "%.1fC", distemp);
+                VFDWriteStrAndShow(1, str);
             }
+            else
+            {
+                distemp = hd;
+                distemp = distemp / 100;
+                sprintf(str, "%.1f%%", distemp);
+                VFDWriteStrAndShow(1, str);
+            }
+            tcnt++;
         }
         else VFDWriteStrAndShow(1, "Scan  "); //未扫描到广播数据时显示 扫描
     }
