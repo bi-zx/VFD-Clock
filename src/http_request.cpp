@@ -50,8 +50,7 @@ unsigned int stringToint(char source[], unsigned char startBit, unsigned char le
 /* 解析时间JSON数据 */
 static void parse_time_json(String payload)
 {
-    // 为ArduinoJson分配内存
-    DynamicJsonDocument doc(1024);
+    JsonDocument doc;
 
     // 解析JSON
     DeserializationError error = deserializeJson(doc, payload);

@@ -1,5 +1,5 @@
-#ifndef _FS_INFO_RW_H_
-#define _FS_INFO_RW_H_
+#ifndef FS_INFO_RW_H_
+#define FS_INFO_RW_H_
 
 typedef enum
 {
