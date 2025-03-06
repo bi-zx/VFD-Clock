@@ -1,10 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VFD Clock</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
-
+    <div class="container">
+        <h1>VFD Clock 控制面板</h1>
+        <div class="info">
+            <p>设备IP: <span id="deviceIP"></span></p>
+            <p>WiFi模式: <span id="wifiMode"></span></p>
+        </div>
+        <p><a href="/update" class="button">固件更新</a></p>
+    </div>
+    <script>
+        document.getElementById('deviceIP').textContent = window.location.host;
+        document.getElementById('wifiMode').textContent = 
+            window.location.host.startsWith('192.168.4.') ? 'AP模式' : 'STA模式';
+    </script>
 </body>
 </html>

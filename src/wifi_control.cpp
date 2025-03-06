@@ -13,6 +13,7 @@
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 #include "ElegantOTA.h"
+#include "LittleFS.h"
 #include <WebServer.h>
 #include "wifi_control.h"
 #include "configuration.h"
@@ -94,17 +95,12 @@ void ota_init()
     // 基础网页
     server.on("/", HTTP_GET, []()
     {
-        String html = "<html><body>";
-        html += "<h1>VFD Clock OTA Update</h1>";
-        html += "<p><a href='/update'>Click here to update firmware</a></p>";
-        html += "</body></html>";
-        server.send(200, "text/html", html);
-    });
-
-    // 添加一个简单的响应测试页面
-    server.on("/test", HTTP_GET, []()
-    {
-        server.send(200, "text/plain", "Server is running!");
+        File file = LittleFS.open("/index.html", "r");
+        if (file)
+        {
+            server.streamFile(file, "text/html");
+            file.close();
+        }
     });
 
     // 启动 ElegantOTA
