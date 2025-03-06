@@ -1100,28 +1100,6 @@ void clock_funtion_task(void* parameter)
             VFDWriteStrAndShow(1, "  WIFI OK   ");
             vTaskDelay(1000 / portTICK_PERIOD_MS);
             VFDWriteStrAndShow(1, "            ");
-
-            String ip = WiFi.localIP().toString();
-            if (ip.length() <= 12)
-            {
-                VFDWriteStrAndShow(1, ip.c_str());
-                vTaskDelay(2000 / portTICK_PERIOD_MS);
-                VFDWriteStrAndShow(1, "            ");
-            }
-            else
-            {
-                // IP地址超过12位，分两次显示
-                String ip_part1 = ip.substring(0, 12);
-                String ip_part2 = ip.substring(12);
-
-                VFDWriteStrAndShow(1, ip_part1.c_str());
-                vTaskDelay(2000 / portTICK_PERIOD_MS);
-                VFDWriteStrAndShow(1, "            ");
-
-                VFDWriteStrAndShow(1, ip_part2.c_str());
-                vTaskDelay(2000 / portTICK_PERIOD_MS);
-                VFDWriteStrAndShow(1, "            ");
-            }
         }
         http_time_get(); //获取时间并校准时间
         rtc_time_set(); // 更新RTC时间
@@ -1144,34 +1122,36 @@ void clock_funtion_task(void* parameter)
             VFDWriteStrAndShow(1, AP_PASSWORD); // 显示AP名称
             vTaskDelay(2000 / portTICK_PERIOD_MS);
             VFDWriteStrAndShow(1, "            ");
-
-            String ip = WiFi.softAPIP().toString();
-            if (ip.length() <= 12)
-            {
-                VFDWriteStrAndShow(1, ip.c_str());
-                vTaskDelay(2000 / portTICK_PERIOD_MS);
-                VFDWriteStrAndShow(1, "            ");
-            }
-            else
-            {
-                // IP地址超过12位，分两次显示
-                String ip_part1 = ip.substring(0, 12);
-                String ip_part2 = ip.substring(12);
-
-                VFDWriteStrAndShow(1, ip_part1.c_str());
-                vTaskDelay(2000 / portTICK_PERIOD_MS);
-                VFDWriteStrAndShow(1, "            ");
-
-                VFDWriteStrAndShow(1, ip_part2.c_str());
-                vTaskDelay(2000 / portTICK_PERIOD_MS);
-                VFDWriteStrAndShow(1, "            ");
-            }
         }
         // 从 RTC 获取时间
         if (rtc_time_get())
         {
             Serial.println("[INFO] 从RTC获取时间成功");
         }
+    }
+
+    String ip;
+    if (WiFi.getMode() == WIFI_AP) ip = WiFi.softAPIP().toString();
+    else ip = WiFi.localIP().toString();
+    if (ip.length() <= 12)
+    {
+        VFDWriteStrAndShow(1, ip.c_str());
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        VFDWriteStrAndShow(1, "            ");
+    }
+    else
+    {
+        // IP地址超过12位，分两次显示
+        String ip_part1 = ip.substring(0, 12);
+        String ip_part2 = ip.substring(12);
+
+        VFDWriteStrAndShow(1, ip_part1.c_str());
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        VFDWriteStrAndShow(1, "            ");
+
+        VFDWriteStrAndShow(1, ip_part2.c_str());
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        VFDWriteStrAndShow(1, "            ");
     }
     ota_init();
 

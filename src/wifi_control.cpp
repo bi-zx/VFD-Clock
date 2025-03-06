@@ -96,17 +96,6 @@ void ota_init()
     {
         String html = "<html><body>";
         html += "<h1>VFD Clock OTA Update</h1>";
-        html += "<p>Current IP: ";
-        // 根据当前模式显示正确的IP
-        if (WiFi.getMode() == WIFI_AP)
-        {
-            html += WiFi.softAPIP().toString();
-        }
-        else
-        {
-            html += WiFi.localIP().toString();
-        }
-        html += "</p>";
         html += "<p><a href='/update'>Click here to update firmware</a></p>";
         html += "</body></html>";
         server.send(200, "text/html", html);
