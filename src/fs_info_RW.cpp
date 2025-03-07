@@ -92,19 +92,19 @@ void fs_wifi_information_write(wifi_info_config_t* config, size_t len)
         return;
     }
 
-    // 验证 SSID 和密码长度
+    // 验证 SSID（必须有值）
     if (strlen((char*)config->ssid) == 0 || strlen((char*)config->ssid) > 31)
     {
         Serial.println("[ERROR] Invalid SSID length");
         return;
     }
 
+    // 验证密码（允许为空，但如果有值则不能超过63字符）
     if (strlen((char*)config->password) > 63)
     {
         Serial.println("[ERROR] Password too long");
         return;
     }
-
     if (!LittleFS.begin(false))
     {
         Serial.println("[ERROR] Failed to mount LittleFS");

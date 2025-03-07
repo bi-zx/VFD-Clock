@@ -132,23 +132,32 @@ void ota_init()
         const char* ssid = doc["ssid"];
         const char* password = doc["password"];
 
-        // 验证 SSID 和密码
+        // 验证 SSID（必须有值）
         if (!ssid || strlen(ssid) == 0 || strlen(ssid) > 31)
         {
             server.send(400, "text/plain", "SSID 无效");
             return;
         }
 
-        if (!password || strlen(password) > 63)
+        // 验证密码（允许为空，但如果有值则不能超过63字符）
+        if (password && strlen(password) > 63)
         {
             server.send(400, "text/plain", "密码无效");
             return;
         }
+
         // 创建配置结构体
         wifi_info_config_t config;
         memset(&config, 0, sizeof(wifi_info_config_t));
         strlcpy((char*)config.ssid, ssid, sizeof(config.ssid));
-        strlcpy((char*)config.password, password, sizeof(config.password));
+        if (password)
+        {
+            strlcpy((char*)config.password, password, sizeof(config.password));
+        }
+        else
+        {
+            config.password[0] = '\0'; // 确保密码为空字符串
+        }
         // 保存到文件系统
         fs_wifi_information_write(&config, sizeof(wifi_info_config_t));
         // 发送成功响应，并通知前端将要重启
